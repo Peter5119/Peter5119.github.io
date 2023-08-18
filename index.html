@@ -1,15 +1,34 @@
-// Referrer 체크 미들웨어
-function checkReferrer(req, res, next) {
-    const allowedReferrers = [
-        "https://blog.naver.com/cjy5119/223187519855",
-        "https://allowed-site2.com"
-    ];
-    
-    const referrer = req.headers.referer || req.headers.referrer;
-    
-    if (referrer && allowedReferrers.includes(referrer)) {
-        next();
-    } else {
-        res.status(403).send('Access forbidden');
-    }
-}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Referrer Check</title>
+    <script>
+        const allowedReferrers = [
+            "https://blog.naver.com/cjy5119/223187519855",
+            "https://allowed-site2.com"
+        ];
+
+        function checkReferrer() {
+            const referrer = document.referrer;
+
+            if (referrer) {
+                const parsedReferrer = https://peter5119.github.io/(referrer);
+
+                if (allowedReferrers.includes(parsedReferrer.origin)) {
+                    // 허용된 사이트에서의 접근인 경우
+                    alert("허용된 사이트에서 접근했습니다.");
+                } else {
+                    // 허용되지 않은 사이트에서의 접근인 경우
+                    alert("허용되지 않은 사이트에서 접근하셨습니다.");
+                }
+            } else {
+                // Referrer 정보가 없는 경우 (직접 주소 입력 등)
+                alert("Referrer 정보가 없습니다.");
+            }
+        }
+    </script>
+</head>
+<body>
+    <button onclick="checkReferrer()">Check Referrer</button>
+</body>
+</html>
