@@ -1,35 +1,62 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Referrer Check and Redirection</title>
-    <script>
-        // 허용된 사이트 도메인 목록
-        const allowedSites = [
-            "https://peter5119.github.io/",
-            "https://blog.naver.com/cjy5119/223187519855"
-        ];
+const express = require('express');
+const bodyParser = require('body-parser');
+const session = require('express-session');
+const passport = require('passport');
+const LocalStrategy = require('passport-local').Strategy;
 
-        function checkReferrerAndRedirect() {
-            const referrer = document.referrer;
+const app = express();
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(session({ secret: 'yourSecretKey', resave: false, saveUninitialized: true }));
+app.use(passport.initialize());
+app.use(passport.session());
 
-            if (referrer) {
-                const parsedReferrer = new URL(referrer);
+// 가상의 사용자 데이터베이스
+const users = [
+    { id: 1, username: 'user1', password: 'password1' },
+    { id: 2, username: 'user2', password: 'password2' }
+];
 
-                if (allowedSites.includes(parsedReferrer.origin)) {
-                    // 허용된 사이트에서의 접근인 경우, 다른 사이트로 리다이렉트
-                    window.location.href = "https://cafe.naver.com/petertest12341234";
-                } else {
-                    // 허용되지 않은 사이트에서의 접근인 경우
-                    alert("Access forbidden");
-                }
-            } else {
-                // Referrer 정보가 없는 경우 (직접 주소 입력 등)
-                alert("응아니야");
-            }
+// 패스포트 설정
+passport.use(new LocalStrategy(
+    (username, password, done) => {
+        const user = users.find(u => u.username === username && u.password === password);
+        if (user) {
+            return done(null, user);
+        } else {
+            return done(null, false, { message: '인증 실패' });
         }
-    </script>
-</head>
-<body>
-    <button onclick="checkReferrerAndRedirect()">Check and Redirect</button>
-</body>
-</html>
+    }
+));
+
+passport.serializeUser((user, done) => {
+    done(null, user.id);
+});
+
+passport.deserializeUser((id, done) => {
+    const user = users.find(u => u.id === id);
+    done(null, user);
+});
+
+// 인증 검증 미들웨어
+function isAuthenticated(req, res, next) {
+    if (req.isAuthenticated()) {
+        return next();
+    } else {
+        res.status(401).json({ message: '인증되지 않았습니다.' });
+    }
+}
+
+// 보호된 라우트
+app.get('/protected', isAuthenticated, (req, res) => {
+    res.json({ message: '보호된 리소스에 접근했습니다.' });
+});
+
+// 로그인 라우트
+app.post('/login', passport.authenticate('local', {
+    successRedirect: '/protected',
+    failureRedirect: '/login-failed'
+}));
+
+app.listen(3000, () => {
+    console.log('서버가 3000번 포트에서 실행 중입니다.');
+});
