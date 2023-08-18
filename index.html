@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Referrer Check and Redirection</title>
+    <script>
+        // 허용된 사이트 도메인 목록
+        const allowedSites = [
+            "https://bippew.fanbox.cc/posts/576710",
+            "https://allowed-site2.com/"
+        ];
+
+        function checkReferrerAndRedirect() {
+            const referrer = document.referrer;
+
+            if (referrer) {
+                const parsedReferrer = new URL(referrer);
+
+                if (allowedSites.includes(parsedReferrer.origin)) {
+                    // 허용된 사이트에서의 접근인 경우, 다른 사이트로 리다이렉트
+                    window.location.href = "https://bippew.blogspot.com/p/asdf.html";
+                } else {
+                    // 허용되지 않은 사이트에서의 접근인 경우
+                    alert("Access forbidden");
+                }
+            } else {
+                // Referrer 정보가 없는 경우 (직접 주소 입력 등)
+                alert("Access forbidden");
+            }
+        }
+    </script>
+</head>
+<body>
+    <button onclick="checkReferrerAndRedirect()">Check and Redirect</button>
+</body>
+</html>
