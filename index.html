@@ -1,62 +1,15 @@
-const express = require('express');
-const bodyParser = require('body-parser');
-const session = require('express-session');
-const passport = require('passport');
-const LocalStrategy = require('passport-local').Strategy;
-
-const app = express();
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(session({ secret: 'yourSecretKey', resave: false, saveUninitialized: true }));
-app.use(passport.initialize());
-app.use(passport.session());
-
-// 가상의 사용자 데이터베이스
-const users = [
-    { id: 1, username: 'user1', password: 'password1' },
-    { id: 2, username: 'user2', password: 'password2' }
-];
-
-// 패스포트 설정
-passport.use(new LocalStrategy(
-    (username, password, done) => {
-        const user = users.find(u => u.username === username && u.password === password);
-        if (user) {
-            return done(null, user);
-        } else {
-            return done(null, false, { message: '인증 실패' });
-        }
-    }
-));
-
-passport.serializeUser((user, done) => {
-    done(null, user.id);
-});
-
-passport.deserializeUser((id, done) => {
-    const user = users.find(u => u.id === id);
-    done(null, user);
-});
-
-// 인증 검증 미들웨어
-function isAuthenticated(req, res, next) {
-    if (req.isAuthenticated()) {
-        return next();
+// Referrer 체크 미들웨어
+function checkReferrer(req, res, next) {
+    const allowedReferrers = [
+        "https://blog.naver.com/cjy5119/223187519855",
+        "https://allowed-site2.com"
+    ];
+    
+    const referrer = req.headers.referer || req.headers.referrer;
+    
+    if (referrer && allowedReferrers.includes(referrer)) {
+        next();
     } else {
-        res.status(401).json({ message: '인증되지 않았습니다.' });
+        res.status(403).send('Access forbidden');
     }
 }
-
-// 보호된 라우트
-app.get('/protected', isAuthenticated, (req, res) => {
-    res.json({ message: '보호된 리소스에 접근했습니다.' });
-});
-
-// 로그인 라우트
-app.post('/login', passport.authenticate('local', {
-    successRedirect: '/protected',
-    failureRedirect: '/login-failed'
-}));
-
-app.listen(3000, () => {
-    console.log('서버가 3000번 포트에서 실행 중입니다.');
-});
